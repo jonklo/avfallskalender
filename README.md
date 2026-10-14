@@ -19,4 +19,4 @@ https://<your-worker>.workers.dev/feed?address=Storgata%201&municipality=Oslo
 | `municipality` | Name or four-digit number. |
 | `key` | Required when the `FEED_KEY` secret is set. |
 
-Each collection day is an all-day event with a reminder at 19:00 the evening before.
+Each collection day is an all-day event with a reminder at 7 PM the evening before.
