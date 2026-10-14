@@ -3,7 +3,7 @@ const NORKART_API =
   "https://komteksky.norkart.no/MinRenovasjon.Api/api/";
 // Public key embedded in the Min Renovasjon apps. Not an official API; may change without notice.
 const NORKART_APP_KEY = "AE13DEEC-804F-4615-A74E-B4FAC11F0A30";
-const USER_AGENT = "minrenovasjon-ical";
+const USER_AGENT = "avfallskalender";
 const CACHE_SECONDS = 6 * 60 * 60;
 
 // Oslo runs its own collection service instead of Min Renovasjon.
@@ -163,7 +163,7 @@ function buildIcs(addr, collections) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//minrenovasjon-ical//EN",
+    "PRODID:-//avfallskalender//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeText(`Avfall – ${addr.label}`)}`,
@@ -176,7 +176,7 @@ function buildIcs(addr, collections) {
     const types = [...byDay.get(day)].sort((a, b) => a.localeCompare(b, "nb")).join(", ");
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${day}-${addr.municipality}-${addr.streetCode}-${addr.number}${addr.letter}@minrenovasjon-ical`,
+      `UID:${day}-${addr.municipality}-${addr.streetCode}-${addr.number}${addr.letter}@avfallskalender`,
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${day}`,
       `DTEND;VALUE=DATE:${addDays(day, 1)}`,

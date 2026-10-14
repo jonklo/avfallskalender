@@ -1,9 +1,9 @@
 {
-  "name": "minrenovasjon-ical",
+  "name": "avfallskalender",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "iCalendar feed for Norwegian waste collection dates from Min Renovasjon",
+  "description": "iCalendar feed for Norwegian waste collection dates from Min Renovasjon and Oslo kommune",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
