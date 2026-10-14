@@ -4,69 +4,246 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Waste collection calendar</title>
+<meta name="description" content="Subscribe to waste collection dates from Min Renovasjon as an iCal (ICS) feed in Apple Calendar, Google Calendar or Outlook.">
+<meta name="keywords" content="Min Renovasjon, iCal, ICS, iCalendar, webcal, calendar subscription, waste collection, tømmekalender, avfallskalender, tømmedager, renovasjon, søppeltømming, Apple Calendar, Google Calendar, Outlook">
 <style>
-  :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-  body { max-width: 32rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
-  input { width: 100%; box-sizing: border-box; padding: .5rem; font: inherit; }
-  ul { list-style: none; padding: 0; }
-  li button { width: 100%; padding: .5rem; font: inherit; text-align: left; background: none; border: 0; border-bottom: 1px solid #8884; cursor: pointer; }
-  li button:hover { background: #8882; }
-  .subscribe { display: inline-block; padding: .5rem 1rem; border-radius: .25rem; background: #186b3a; color: #fff; text-decoration: none; }
-  code { word-break: break-all; }
+  :root {
+    --ground: #f4f6f5;
+    --card: #ffffff;
+    --ink: #15201a;
+    --muted: #4d5a53;
+    --line: #d3dbd6;
+    --field: #a9b5ad;
+    --accent: #1d6b40;
+    --accent-soft: #1d6b4014;
+    --accent-tint: #1d6b401a;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--ground); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  p { margin: 0; }
+  ul { margin: 0; padding: 0; list-style: none; }
+
+  main { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 72px 24px 48px; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; }
+  .intro { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .eyebrow a { color: var(--accent); text-decoration: none; }
+  .eyebrow a:hover { text-decoration: underline; }
+  h1 { margin: 0; font-size: clamp(32px, 6vw, 44px); line-height: 1.1; letter-spacing: -.02em; }
+  .lead { font-size: 18px; color: var(--muted); }
+  .facts { margin-top: 8px; display: flex; flex-direction: column; gap: 14px; }
+  .facts li { display: flex; gap: 12px; align-items: flex-start; }
+  .facts svg { flex: none; margin-top: 2px; color: var(--accent); }
+
+  .card { flex: 1.3 1 420px; min-width: 0; padding: 24px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 14px; }
+  label { font-weight: 600; }
+  .field { position: relative; margin-top: -8px; }
+  .field svg { position: absolute; left: 14px; top: 14px; color: var(--muted); }
+  input { width: 100%; min-height: 48px; padding: 0 14px 0 44px; border: 1px solid var(--field); border-radius: 8px; font: inherit; color: inherit; background: var(--card); }
+
+  .hits { display: flex; flex-direction: column; gap: 8px; }
+  .hits button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font: inherit; color: inherit; text-align: left; cursor: pointer; }
+  .hits button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .hits button::after { content: ""; flex: none; width: 8px; height: 8px; margin-right: 4px; border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: rotate(45deg); }
+  .lines { display: flex; flex-direction: column; }
+  .meta { font-size: 14px; color: var(--muted); }
+
+  .back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -10px 0 -6px -10px; padding: 0 12px 0 8px; border: 0; border-radius: 8px; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; }
+  .back:hover { background: var(--accent-soft); }
+  .address { font-size: 20px; font-weight: 700; }
+  .days { display: flex; flex-direction: column; gap: 12px; }
+  .days li { display: flex; align-items: center; gap: 14px; }
+  .badge { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 10px; background: var(--accent-tint); color: var(--accent); line-height: 1.15; }
+  .badge span { font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+  .badge strong { font-size: 22px; }
+  .actions { padding-top: 20px; border-top: 1px solid var(--line); }
+  .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+  .button { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border: 1px solid var(--field); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .button.primary { border-color: var(--accent); background: var(--accent); color: #ffffff; }
+  .url { display: flex; gap: 8px; align-items: flex-start; }
+  code { flex: 1 1 auto; min-width: 0; padding: 10px 12px; border-radius: 8px; background: var(--ground); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+  .url .button { flex: none; min-height: 44px; padding: 0 14px; font-size: 14px; gap: 6px; }
+
+  footer { width: 100%; max-width: 1040px; margin: 0 auto; padding: 24px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
-<h1>Waste collection calendar</h1>
-<p>Find your address and subscribe to its collection dates from Min Renovasjon.</p>
-<input id="q" type="search" placeholder="Street and number, e.g. Storgata 1" autocomplete="off" autofocus>
-<ul id="hits"></ul>
-<div id="result" hidden>
-  <p><strong id="label"></strong></p>
-  <p><a id="subscribe" class="subscribe">Subscribe</a> <a id="google">Add to Google Calendar</a></p>
-  <p><code id="url"></code></p>
-</div>
+<main>
+  <section class="intro">
+    <p class="eyebrow"><a id="home" href="/">Min Renovasjon</a></p>
+    <h1>Waste collection calendar</h1>
+    <p class="lead">Find your address and subscribe. Collection days show up in your calendar app and stay up to date.</p>
+    <ul class="facts">
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>One all-day event per collection day, listing what is collected</li>
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Reminder at 19:00 the evening before</li>
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Updates by itself when the schedule changes</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-live="polite">
+    <div id="search" class="stack">
+      <label for="q">Address</label>
+      <div class="field">
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Street and number, e.g. Storgata 1" autocomplete="off" autofocus>
+      </div>
+      <p id="search-status" class="muted" hidden></p>
+      <ul id="hits" class="hits"></ul>
+    </div>
+
+    <div id="selected" class="stack" hidden>
+      <button id="change" type="button" class="back"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Change address</button>
+      <div>
+        <p class="muted small">Calendar for</p>
+        <p id="label" class="address"></p>
+      </div>
+      <div class="stack">
+        <p class="muted small"><strong>Next collections</strong></p>
+        <p id="feed-status" class="muted"></p>
+        <ul id="days" class="days"></ul>
+      </div>
+      <div id="actions" class="stack actions">
+        <div class="buttons">
+          <a id="subscribe" class="button primary"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Subscribe</a>
+          <a id="google" class="button">Add to Google Calendar</a>
+        </div>
+        <div class="url">
+          <code id="url"></code>
+          <button id="copy" type="button" class="button"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span id="copy-label">Copy</span></button>
+        </div>
+        <p class="muted small">Subscribe opens Apple Calendar or Outlook. In Apple Calendar, uncheck “Remove alerts” to keep the reminder. Google Calendar ignores reminders.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Uses the unofficial Min Renovasjon API. Not affiliated with Norkart.
+  <a href="https://github.com/jonklo/minrenovasjon-ical">Source on GitHub</a>
+</footer>
+
 <script>
   const $ = (id) => document.getElementById(id);
+  const el = (tag, text, className = "") => Object.assign(document.createElement(tag), { className }, text == null ? {} : { textContent: text });
+  const titleCase = (s) => s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
   const key = new URLSearchParams(location.search).get("key");
+  if (key) $("home").search = new URLSearchParams({ key });
   let timer;
+  let current;
 
   $("q").addEventListener("input", () => {
     clearTimeout(timer);
     timer = setTimeout(search, 300);
   });
 
+  function setStatus(id, text) {
+    $(id).textContent = text;
+    $(id).hidden = !text;
+  }
+
   async function search() {
     const term = $("q").value.trim();
+    setStatus("search-status", "");
     if (term.length < 3) return $("hits").replaceChildren();
     try {
       const r = await fetch("https://ws.geonorge.no/adresser/v1/sok?" + new URLSearchParams({ sok: term, treffPerSide: 10 }));
       const { adresser = [] } = await r.json();
       if (term !== $("q").value.trim()) return;
-      $("hits").replaceChildren(...adresser.map((a) => {
-        const b = document.createElement("button");
-        b.textContent = `${a.adressetekst}, ${a.postnummer} ${a.poststed} (${a.kommunenavn})`;
-        b.onclick = () => select(a, b.textContent);
-        const li = document.createElement("li");
-        li.append(b);
-        return li;
-      }));
+      $("hits").replaceChildren(...adresser.map(hit));
+      if (!adresser.length) setStatus("search-status", "No addresses found.");
     } catch {
-      $("hits").textContent = "Address lookup failed. Try again.";
+      $("hits").replaceChildren();
+      setStatus("search-status", "Address lookup failed. Try again.");
     }
   }
 
-  function select(a, label) {
+  function hit(a) {
+    const place = `${a.postnummer} ${titleCase(a.poststed)}`;
+    const text = el("span", null, "lines");
+    text.append(el("strong", a.adressetekst), el("span", `${place} · ${titleCase(a.kommunenavn)}`, "meta"));
+    const button = el("button");
+    button.type = "button";
+    button.append(text);
+    button.onclick = () => select(a, `${a.adressetekst}, ${place}`);
+    const li = el("li");
+    li.append(button);
+    return li;
+  }
+
+  async function select(a, label) {
     const params = new URLSearchParams({ address: a.adressetekst, municipality: a.kommunenummer });
     if (key) params.set("key", key);
-    const feed = `${location.origin}/feed?${params}`;
+    const feed = (current = `${location.origin}/feed?${params}`);
     const webcal = feed.replace(/^https?:/, "webcal:");
     $("label").textContent = label;
     $("subscribe").href = webcal;
     $("google").href = "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(webcal);
     $("url").textContent = feed;
-    $("hits").replaceChildren();
-    $("result").hidden = false;
+    $("days").replaceChildren();
+    $("actions").hidden = true;
+    setStatus("feed-status", "Loading collection days…");
+    $("search").hidden = true;
+    $("selected").hidden = false;
+
+    let ics;
+    try {
+      const r = await fetch(feed);
+      ics = await r.text();
+      if (feed !== current) return;
+      if (!r.ok) return setStatus("feed-status", ics);
+    } catch {
+      if (feed === current) setStatus("feed-status", "Could not load collection days. Try again.");
+      return;
+    }
+    const days = upcoming(ics).slice(0, 3);
+    $("days").replaceChildren(...days.map(dayItem));
+    setStatus("feed-status", days.length ? "" : "No upcoming collections yet.");
+    $("actions").hidden = false;
   }
+
+  function upcoming(ics) {
+    const today = new Date().toLocaleDateString("sv").replaceAll("-", "");
+    return ics.replace(/\r\n /g, "").split("BEGIN:VEVENT").slice(1)
+      .map((ev) => ({
+        date: ev.match(/DTSTART;VALUE=DATE:(\d{8})/)[1],
+        what: ev.match(/SUMMARY:(.*)/)[1].replace(/^🗑️\s*/u, "").replace(/\\([,;\\])/g, "$1"),
+      }))
+      .filter((d) => d.date >= today)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  function dayItem({ date, what }) {
+    const day = new Date(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8));
+    const badge = el("span", null, "badge");
+    badge.append(el("span", day.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase()), el("strong", day.getDate()));
+    const text = el("span", null, "lines");
+    text.append(el("strong", what), el("span", day.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }), "meta"));
+    const li = el("li");
+    li.append(badge, text);
+    return li;
+  }
+
+  $("change").onclick = () => {
+    current = null;
+    $("selected").hidden = true;
+    $("search").hidden = false;
+    $("q").focus();
+  };
+
+  $("copy").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText($("url").textContent);
+      $("copy-label").textContent = "Copied";
+      setTimeout(() => ($("copy-label").textContent = "Copy"), 2000);
+    } catch {
+      getSelection().selectAllChildren($("url"));
+    }
+  };
 </script>
 </body>
 </html>
