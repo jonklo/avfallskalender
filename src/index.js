@@ -12,6 +12,7 @@ const OSLO_API = "https://www.oslo.kommune.no/actions/snap-lib-waste-complaint/s
 // Hyppighet.Faktor to days between collections. Only one day is known, so several times a week projects weekly.
 const OSLO_INTERVAL_DAYS = { 10000: 7, 20000: 7, 30000: 7, 40000: 14, 50000: 28 };
 const OSLO_HORIZON_DAYS = 90;
+const ESTIMATE_NOTE = "Beregnet ut fra hvor ofte avfallet hentes. Kan avvike, for eksempel rundt helligdager.";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export default {
@@ -130,7 +131,7 @@ async function fetchOslo(addr) {
       collections.push({ date: ymd(known), name });
       const next = known + Math.max(1, Math.ceil((today - known) / step)) * step;
       for (let day = next; day <= today + OSLO_HORIZON_DAYS; day += step) {
-        collections.push({ date: ymd(day), name });
+        collections.push({ date: ymd(day), name, estimated: true });
       }
     }
   }
@@ -161,9 +162,11 @@ function ymd(epochDay) {
 function buildIcs(addr, collections) {
   // One all-day event per collection day, listing every fraction collected that day.
   const byDay = new Map();
-  for (const { date, name } of collections) {
+  const estimated = new Set();
+  for (const { date, name, estimated: guess } of collections) {
     if (!byDay.has(date)) byDay.set(date, new Set());
     byDay.get(date).add(name);
+    if (guess) estimated.add(date);
   }
 
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
@@ -188,6 +191,7 @@ function buildIcs(addr, collections) {
       `DTSTART;VALUE=DATE:${day}`,
       `DTEND;VALUE=DATE:${addDays(day, 1)}`,
       `SUMMARY:${escapeText(`🗑️ ${types}`)}`,
+      ...(estimated.has(day) ? [`DESCRIPTION:${escapeText(ESTIMATE_NOTE)}`] : []),
       "TRANSP:TRANSPARENT",
       // All-day events start at local midnight, so this fires at 19:00 the evening before.
       "BEGIN:VALARM",

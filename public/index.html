@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hentedager for avfall i kalenderen</title>
 <meta name="description" content="Abonner på hentedager for avfall fra Min Renovasjon eller Oslo kommune som iCal-kalender (ICS) i Apple Kalender, Google Kalender eller Outlook.">
+<link rel="canonical" href="https://avfallskalender.no/">
+<link rel="alternate" hreflang="nb" href="https://avfallskalender.no/">
+<link rel="alternate" hreflang="en" href="https://avfallskalender.no/?lang=en">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1d6b40">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://avfallskalender.no/">
+<meta property="og:title" content="Avfallskalender">
+<meta property="og:description" content="Hentedager for avfall rett i kalenderen din. Abonner i Apple Kalender, Google Kalender eller Outlook.">
+<meta property="og:locale" content="nb_NO">
+<meta property="og:locale:alternate" content="en_US">
+<meta name="twitter:card" content="summary">
 <meta name="keywords" content="Min Renovasjon, iCal, ICS, iCalendar, webcal, calendar subscription, waste collection, tømmekalender, avfallskalender, tømmedager, renovasjon, søppeltømming, Apple Calendar, Google Calendar, Outlook">
 <style>
   :root {
@@ -78,6 +90,12 @@
   .foot-links a:hover, .foot-links button:hover { color: var(--accent); text-decoration: underline; }
   .foot-links svg { flex: none; color: var(--muted); }
   .foot-legal { margin-top: 24px; font-size: 13px; }
+
+  dialog { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); }
+  dialog::backdrop { background: #15201a66; }
+  .dialog-body { display: flex; flex-direction: column; gap: 12px; padding: 24px; }
+  .dialog-body h2 { margin: 0 0 4px; font-size: 22px; line-height: 1.2; }
+  .dialog-body .button { align-self: flex-start; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -114,6 +132,7 @@
         <p class="muted small"><strong data-i18n="next">Neste hentedager</strong></p>
         <p id="feed-status" class="muted"></p>
         <ul id="days" class="days"></ul>
+        <p id="estimate" class="muted small" data-i18n="estimate" hidden>I Oslo er datoene etter neste henting beregnet ut fra hvor ofte avfallet hentes, og kan avvike rundt helligdager.</p>
       </div>
       <div id="actions" class="stack actions">
         <div class="buttons">
@@ -138,11 +157,26 @@
     </div>
     <ul class="foot-links">
       <li><a href="https://github.com/jonklo/avfallskalender"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span data-i18n="source">Kildekode på GitHub</span></a></li>
+      <li><button id="privacy-open" type="button"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/></svg><span data-i18n="privacy">Personvern</span></button></li>
       <li><button id="lang" type="button" lang="en"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span id="lang-label">English</span></button></li>
     </ul>
   </div>
-  <p class="foot-legal" data-i18n="legal">Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.</p>
+  <p class="foot-legal" data-i18n="legal">Et ikke-kommersielt hobbyprosjekt, uten garanti for at datoene stemmer. Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.</p>
 </footer>
+
+<dialog id="privacy-dialog" aria-labelledby="privacy-title">
+  <form method="dialog" class="dialog-body">
+    <h2 id="privacy-title" data-i18n="privacy">Personvern</h2>
+    <p data-i18n="privacy1">Avfallskalender er et ikke-kommersielt hobbyprosjekt. Den lagrer ingen personopplysninger, setter ingen informasjonskapsler og har ingen analyse eller sporing.</p>
+    <p data-i18n="privacy2">Adressesøket går rett fra nettleseren din til Kartverket.</p>
+    <p data-i18n="privacy3">Når kalenderen hentes, sender tjenesten adressen videre til Min Renovasjon (Norkart) eller Oslo kommune for å finne hentedagene. Forespørsler logges ikke.</p>
+    <p data-i18n="privacy4">Ferdige kalendere mellomlagres hos Cloudflare i opptil seks timer, så de andre tjenestene ikke belastes unødig.</p>
+    <p data-i18n="privacy5">Kalenderlenken inneholder adressen din. Del den bare med dem som skal se den.</p>
+    <p data-i18n="privacy6">Språkvalget ditt lagres bare i nettleseren.</p>
+    <p><span data-i18n="privacy7">Spørsmål? Ta kontakt på</span> <a href="https://github.com/jonklo/avfallskalender">GitHub</a>.</p>
+    <button class="button primary" data-i18n="close">Lukk</button>
+  </form>
+</dialog>
 
 <script>
   const $ = (id) => document.getElementById(id);
@@ -178,7 +212,17 @@
       note: "Abonner åpner Apple Kalender eller Outlook. I Apple Kalender må du fjerne haken for «Fjern varsler» for å beholde påminnelsen. Google Kalender ignorerer påminnelser.",
       about: "Hentedager for avfall som kalenderabonnement. Hentedagene kommer fra Min Renovasjon (Norkart) og Oslo kommune, adressene fra Kartverket.",
       source: "Kildekode på GitHub",
-      legal: "Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.",
+      legal: "Et ikke-kommersielt hobbyprosjekt, uten garanti for at datoene stemmer. Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.",
+      estimate: "I Oslo er datoene etter neste henting beregnet ut fra hvor ofte avfallet hentes, og kan avvike rundt helligdager.",
+      privacy: "Personvern",
+      privacy1: "Avfallskalender er et ikke-kommersielt hobbyprosjekt. Den lagrer ingen personopplysninger, setter ingen informasjonskapsler og har ingen analyse eller sporing.",
+      privacy2: "Adressesøket går rett fra nettleseren din til Kartverket.",
+      privacy3: "Når kalenderen hentes, sender tjenesten adressen videre til Min Renovasjon (Norkart) eller Oslo kommune for å finne hentedagene. Forespørsler logges ikke.",
+      privacy4: "Ferdige kalendere mellomlagres hos Cloudflare i opptil seks timer, så de andre tjenestene ikke belastes unødig.",
+      privacy5: "Kalenderlenken inneholder adressen din. Del den bare med dem som skal se den.",
+      privacy6: "Språkvalget ditt lagres bare i nettleseren.",
+      privacy7: "Spørsmål? Ta kontakt på",
+      close: "Lukk",
       other: "English",
       locale: "nb-NO",
     },
@@ -205,7 +249,17 @@
       note: "Subscribe opens Apple Calendar or Outlook. In Apple Calendar, uncheck “Remove alerts” to keep the reminder. Google Calendar ignores reminders.",
       about: "Waste collection days as a calendar subscription. Collection dates come from Min Renovasjon (Norkart) and Oslo kommune, addresses from Kartverket.",
       source: "Source on GitHub",
-      legal: "Not affiliated with Norkart, Oslo kommune or Kartverket. Uses unofficial APIs that can change without notice. MIT license.",
+      legal: "A non-commercial hobby project, with no guarantee that the dates are correct. Not affiliated with Norkart, Oslo kommune or Kartverket. Uses unofficial APIs that can change without notice. MIT license.",
+      estimate: "In Oslo, dates after the next pickup are estimated from how often waste is collected, and may shift around holidays.",
+      privacy: "Privacy",
+      privacy1: "Avfallskalender is a non-commercial hobby project. It stores no personal data, sets no cookies, and has no analytics or tracking.",
+      privacy2: "Address search goes straight from your browser to Kartverket.",
+      privacy3: "When your calendar is fetched, the service passes your address on to Min Renovasjon (Norkart) or Oslo kommune to find the collection days. Requests are not logged.",
+      privacy4: "Finished calendars are cached at Cloudflare for up to six hours, so the other services aren't loaded unnecessarily.",
+      privacy5: "The calendar link contains your address. Only share it with people who should see it.",
+      privacy6: "Your language choice is stored only in your browser.",
+      privacy7: "Questions? Get in touch on",
+      close: "Close",
       other: "Norsk",
       locale: "en-US",
     },
@@ -227,6 +281,10 @@
     $("lang").lang = lang === "nb" ? "en" : "nb";
     $("days").replaceChildren(...days.map(dayItem));
   }
+
+  $("privacy-open").onclick = () => $("privacy-dialog").showModal();
+  // Close when clicking the backdrop; the form fills the dialog, so only backdrop clicks hit it directly.
+  $("privacy-dialog").onclick = (e) => e.target === $("privacy-dialog") && $("privacy-dialog").close();
 
   $("lang").onclick = () => {
     lang = lang === "nb" ? "en" : "nb";
@@ -287,6 +345,7 @@
     $("url").textContent = feed;
     days = [];
     $("days").replaceChildren();
+    $("estimate").hidden = true;
     $("actions").hidden = true;
     setStatus("feed-status", "loading");
     $("search").hidden = true;
@@ -305,6 +364,7 @@
     days = upcoming(ics).slice(0, 3);
     $("days").replaceChildren(...days.map(dayItem));
     setStatus("feed-status", days.length ? "" : "noUpcoming");
+    $("estimate").hidden = a.kommunenummer !== "0301";
     $("actions").hidden = false;
   }
 

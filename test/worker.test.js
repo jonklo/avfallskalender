@@ -32,7 +32,7 @@ globalThis.fetch = async (input, init = {}) => {
           Id: 1,
           Tjenester: [
             // Past date: projected forward every other week.
-            { Fraksjon: { Tekst: "Restavfall" }, TommeDato: "05.01.2026", Hyppighet: { Faktor: 40000 } },
+            { Fraksjon: { Tekst: "Restavfall" }, TommeDato: dmy(today - 3), Hyppighet: { Faktor: 40000 } },
             // Future date: used as is, then weekly.
             { Fraksjon: { Tekst: "Papir" }, TommeDato: dmy(today + 2), Hyppighet: { Faktor: 10000 } },
           ],
@@ -85,16 +85,20 @@ test("Oslo projects dates from the last known collection", async () => {
   assert.ok(!calls.some((c) => c.url.includes("norkart") && c.headers.Kommunenr === "0301"));
 
   const days = [...ics.matchAll(/DTSTART;VALUE=DATE:(\d{8})/g)].map((m) => m[1]);
-  assert.ok(days.includes("20260105"));
+  assert.ok(days.includes(ymd(today - 3)));
   // Every Restavfall day is a whole number of fortnights after the known one.
   const rest = [...ics.matchAll(/DTSTART;VALUE=DATE:(\d{8})[^]*?SUMMARY:🗑️ ([^\r]*)/g)]
     .filter((m) => m[2].includes("Restavfall"))
     .map((m) => Date.UTC(+m[1].slice(0, 4), +m[1].slice(4, 6) - 1, +m[1].slice(6, 8)) / DAY_MS);
   assert.ok(rest.length > 6);
-  assert.ok(rest.every((d) => (d - Date.UTC(2026, 0, 5) / DAY_MS) % 14 === 0));
+  assert.ok(rest.every((d) => (d - (today - 3)) % 14 === 0));
   assert.ok(rest.some((d) => d >= today && d < today + 15));
   assert.ok(days.includes(ymd(today + 2)) && days.includes(ymd(today + 9)));
   assert.match(ics, /UID:\d{8}-0301-222-1A@/);
+  // Projected days say so; the date from the API doesn't.
+  const event = (day) => ics.split("BEGIN:VEVENT").find((e) => e.includes(`DTSTART;VALUE=DATE:${day}`));
+  assert.doesNotMatch(event(ymd(today + 2)), /DESCRIPTION:Beregnet/);
+  assert.match(event(ymd(today + 9)), /DESCRIPTION:Beregnet/);
 });
 
 test("errors follow Accept-Language", async () => {
