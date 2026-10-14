@@ -7,7 +7,7 @@ Oslo doesn't use Min Renovasjon, so Oslo addresses use Oslo kommune's own lookup
 
 ## Usage
 
-Open `https://<your-worker>.workers.dev/` to look up your address and subscribe, or use the feed URL directly:
+Open `https://<your-worker>.workers.dev/` to look up your address and subscribe. The page is in Norwegian, with a button to switch to English; link to `/?lang=en` to open it in English. Or use the feed URL directly:
 
 ```
 https://<your-worker>.workers.dev/feed?address=Storgata%201&municipality=Oslo
@@ -19,4 +19,4 @@ https://<your-worker>.workers.dev/feed?address=Storgata%201&municipality=Oslo
 | `municipality` | Name or four-digit number. |
 | `key` | Required when the `FEED_KEY` secret is set. |
 
-Each collection day is an all-day event with a reminder at 19:00 the evening before.
+Each collection day is an all-day event with a reminder at 7 PM the evening before.

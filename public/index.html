@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="nb">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Waste collection calendar</title>
-<meta name="description" content="Subscribe to waste collection dates from Min Renovasjon or Oslo kommune as an iCal (ICS) feed in Apple Calendar, Google Calendar or Outlook.">
+<title>Hentedager for avfall i kalenderen</title>
+<meta name="description" content="Abonner på hentedager for avfall fra Min Renovasjon eller Oslo kommune som iCal-kalender (ICS) i Apple Kalender, Google Kalender eller Outlook.">
 <meta name="keywords" content="Min Renovasjon, iCal, ICS, iCalendar, webcal, calendar subscription, waste collection, tømmekalender, avfallskalender, tømmedager, renovasjon, søppeltømming, Apple Calendar, Google Calendar, Outlook">
 <style>
   :root {
@@ -69,62 +69,79 @@
   code { flex: 1 1 auto; min-width: 0; padding: 10px 12px; border-radius: 8px; background: var(--ground); font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
   .url .button { flex: none; min-height: 44px; padding: 0 14px; font-size: 14px; gap: 6px; }
 
-  footer { width: 100%; max-width: 1040px; margin: 0 auto; padding: 24px; font-size: 13px; color: var(--muted); }
+  footer { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px 40px; font-size: 14px; color: var(--muted); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 48px; padding-top: 28px; border-top: 1px solid var(--line); }
+  .foot-about { flex: 1 1 300px; max-width: 520px; display: flex; flex-direction: column; gap: 6px; }
+  .foot-name { font-weight: 700; color: var(--ink); }
+  .foot-links { display: flex; flex-direction: column; margin: -10px 0; }
+  .foot-links a, .foot-links button { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-decoration: none; cursor: pointer; }
+  .foot-links a:hover, .foot-links button:hover { color: var(--accent); text-decoration: underline; }
+  .foot-links svg { flex: none; color: var(--muted); }
+  .foot-legal { margin-top: 24px; font-size: 13px; }
 </style>
 </head>
 <body>
 <main>
   <section class="intro">
     <p class="eyebrow"><a id="home" href="/">Avfallskalender</a></p>
-    <h1>Waste collection calendar</h1>
-    <p class="lead">Find your address and subscribe. Collection days show up in your calendar app and stay up to date.</p>
+    <h1 data-i18n="title">Hentedager for avfall i kalenderen</h1>
+    <p class="lead" data-i18n="lead">Finn adressen din og abonner. Hentedagene dukker opp i kalenderappen og holder seg oppdatert.</p>
     <ul class="facts">
-      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>One all-day event per collection day, listing what is collected</li>
-      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Reminder at 19:00 the evening before</li>
-      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Updates by itself when the schedule changes</li>
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span data-i18n="fact1">Én heldagshendelse per hentedag, med hva som hentes</span></li>
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span data-i18n="fact2">Påminnelse kl. 19.00 kvelden før</span></li>
+      <li><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span data-i18n="fact3">Oppdateres av seg selv når tømmeplanen endres</span></li>
     </ul>
   </section>
 
   <section class="card" aria-live="polite">
     <div id="search" class="stack">
-      <label for="q">Address</label>
+      <label for="q" data-i18n="address">Adresse</label>
       <div class="field">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="Street and number, e.g. Storgata 1" autocomplete="off" autofocus>
+        <input id="q" type="search" placeholder="F.eks. Storgata 1" data-i18n-placeholder="placeholder" autocomplete="off" autofocus>
       </div>
       <p id="search-status" class="muted" hidden></p>
       <ul id="hits" class="hits"></ul>
     </div>
 
     <div id="selected" class="stack" hidden>
-      <button id="change" type="button" class="back"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Change address</button>
+      <button id="change" type="button" class="back"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg><span data-i18n="change">Bytt adresse</span></button>
       <div>
-        <p class="muted small">Calendar for</p>
+        <p class="muted small" data-i18n="calendarFor">Kalender for</p>
         <p id="label" class="address"></p>
       </div>
       <div class="stack">
-        <p class="muted small"><strong>Next collections</strong></p>
+        <p class="muted small"><strong data-i18n="next">Neste hentedager</strong></p>
         <p id="feed-status" class="muted"></p>
         <ul id="days" class="days"></ul>
       </div>
       <div id="actions" class="stack actions">
         <div class="buttons">
-          <a id="subscribe" class="button primary"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>Subscribe</a>
-          <a id="google" class="button">Add to Google Calendar</a>
+          <a id="subscribe" class="button primary"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span data-i18n="subscribe">Abonner</span></a>
+          <a id="google" class="button" data-i18n="google">Legg til i Google Kalender</a>
         </div>
         <div class="url">
           <code id="url"></code>
-          <button id="copy" type="button" class="button"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span id="copy-label">Copy</span></button>
+          <button id="copy" type="button" class="button"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span id="copy-label" data-i18n="copy">Kopier</span></button>
         </div>
-        <p class="muted small">Subscribe opens Apple Calendar or Outlook. In Apple Calendar, uncheck “Remove alerts” to keep the reminder. Google Calendar ignores reminders.</p>
+        <p class="muted small" data-i18n="note">Abonner åpner Apple Kalender eller Outlook. I Apple Kalender må du fjerne haken for «Fjern varsler» for å beholde påminnelsen. Google Kalender ignorerer påminnelser.</p>
       </div>
     </div>
   </section>
 </main>
 
 <footer>
-  Uses the unofficial Min Renovasjon API, and Oslo kommune's lookup for Oslo addresses. Not affiliated with Norkart or Oslo kommune.
-  <a href="https://github.com/jonklo/avfallskalender">Source on GitHub</a>
+  <div class="foot">
+    <div class="foot-about">
+      <p class="foot-name">Avfallskalender</p>
+      <p data-i18n="about">Hentedager for avfall som kalenderabonnement. Hentedagene kommer fra Min Renovasjon (Norkart) og Oslo kommune, adressene fra Kartverket.</p>
+    </div>
+    <ul class="foot-links">
+      <li><a href="https://github.com/jonklo/avfallskalender"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg><span data-i18n="source">Kildekode på GitHub</span></a></li>
+      <li><button id="lang" type="button" lang="en"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><span id="lang-label">English</span></button></li>
+    </ul>
+  </div>
+  <p class="foot-legal" data-i18n="legal">Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.</p>
 </footer>
 
 <script>
@@ -135,15 +152,99 @@
   if (key) $("home").search = new URLSearchParams({ key });
   let timer;
   let current;
+  let days = [];
+
+  const strings = {
+    nb: {
+      title: "Hentedager for avfall i kalenderen",
+      lead: "Finn adressen din og abonner. Hentedagene dukker opp i kalenderappen og holder seg oppdatert.",
+      fact1: "Én heldagshendelse per hentedag, med hva som hentes",
+      fact2: "Påminnelse kl. 19.00 kvelden før",
+      fact3: "Oppdateres av seg selv når tømmeplanen endres",
+      address: "Adresse",
+      placeholder: "F.eks. Storgata 1",
+      noAddresses: "Fant ingen adresser.",
+      lookupFailed: "Adressesøket feilet. Prøv igjen.",
+      change: "Bytt adresse",
+      calendarFor: "Kalender for",
+      next: "Neste hentedager",
+      loading: "Henter hentedager …",
+      loadFailed: "Kunne ikke hente hentedager. Prøv igjen.",
+      noUpcoming: "Ingen kommende hentedager ennå.",
+      subscribe: "Abonner",
+      google: "Legg til i Google Kalender",
+      copy: "Kopier",
+      copied: "Kopiert",
+      note: "Abonner åpner Apple Kalender eller Outlook. I Apple Kalender må du fjerne haken for «Fjern varsler» for å beholde påminnelsen. Google Kalender ignorerer påminnelser.",
+      about: "Hentedager for avfall som kalenderabonnement. Hentedagene kommer fra Min Renovasjon (Norkart) og Oslo kommune, adressene fra Kartverket.",
+      source: "Kildekode på GitHub",
+      legal: "Ikke tilknyttet Norkart, Oslo kommune eller Kartverket. Bruker uoffisielle API-er som kan endres uten varsel. MIT-lisens.",
+      other: "English",
+      locale: "nb-NO",
+    },
+    en: {
+      title: "Waste collection calendar",
+      lead: "Find your address and subscribe. Collection days show up in your calendar app and stay up to date.",
+      fact1: "One all-day event per collection day, listing what is collected",
+      fact2: "Reminder at 7 PM the evening before",
+      fact3: "Updates by itself when the schedule changes",
+      address: "Address",
+      placeholder: "E.g. Storgata 1",
+      noAddresses: "No addresses found.",
+      lookupFailed: "Address lookup failed. Try again.",
+      change: "Change address",
+      calendarFor: "Calendar for",
+      next: "Next collections",
+      loading: "Loading collection days…",
+      loadFailed: "Could not load collection days. Try again.",
+      noUpcoming: "No upcoming collections yet.",
+      subscribe: "Subscribe",
+      google: "Add to Google Calendar",
+      copy: "Copy",
+      copied: "Copied",
+      note: "Subscribe opens Apple Calendar or Outlook. In Apple Calendar, uncheck “Remove alerts” to keep the reminder. Google Calendar ignores reminders.",
+      about: "Waste collection days as a calendar subscription. Collection dates come from Min Renovasjon (Norkart) and Oslo kommune, addresses from Kartverket.",
+      source: "Source on GitHub",
+      legal: "Not affiliated with Norkart, Oslo kommune or Kartverket. Uses unofficial APIs that can change without notice. MIT license.",
+      other: "Norsk",
+      locale: "en-US",
+    },
+  };
+  const store = {
+    get: () => { try { return localStorage.getItem("lang"); } catch { return null; } },
+    set: (v) => { try { localStorage.setItem("lang", v); } catch {} },
+  };
+  let lang = [new URLSearchParams(location.search).get("lang"), store.get()].find((l) => l in strings) ?? "nb";
+  const t = (k) => strings[lang][k];
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.title = t("title");
+    for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n);
+    for (const node of document.querySelectorAll("[data-i18n-placeholder]")) node.placeholder = t(node.dataset.i18nPlaceholder);
+    for (const id of ["search-status", "feed-status"]) if ($(id).dataset.key) $(id).textContent = t($(id).dataset.key);
+    $("lang-label").textContent = t("other");
+    $("lang").lang = lang === "nb" ? "en" : "nb";
+    $("days").replaceChildren(...days.map(dayItem));
+  }
+
+  $("lang").onclick = () => {
+    lang = lang === "nb" ? "en" : "nb";
+    store.set(lang);
+    applyLang();
+  };
 
   $("q").addEventListener("input", () => {
     clearTimeout(timer);
     timer = setTimeout(search, 300);
   });
 
-  function setStatus(id, text) {
-    $(id).textContent = text;
-    $(id).hidden = !text;
+  // Pass a strings key, or { text } for a message from the server.
+  function setStatus(id, msg) {
+    const isKey = typeof msg === "string";
+    $(id).dataset.key = isKey ? msg : "";
+    $(id).textContent = isKey && msg ? t(msg) : msg.text ?? "";
+    $(id).hidden = !$(id).textContent;
   }
 
   async function search() {
@@ -155,10 +256,10 @@
       const { adresser = [] } = await r.json();
       if (term !== $("q").value.trim()) return;
       $("hits").replaceChildren(...adresser.map(hit));
-      if (!adresser.length) setStatus("search-status", "No addresses found.");
+      if (!adresser.length) setStatus("search-status", "noAddresses");
     } catch {
       $("hits").replaceChildren();
-      setStatus("search-status", "Address lookup failed. Try again.");
+      setStatus("search-status", "lookupFailed");
     }
   }
 
@@ -184,25 +285,26 @@
     $("subscribe").href = webcal;
     $("google").href = "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(webcal);
     $("url").textContent = feed;
+    days = [];
     $("days").replaceChildren();
     $("actions").hidden = true;
-    setStatus("feed-status", "Loading collection days…");
+    setStatus("feed-status", "loading");
     $("search").hidden = true;
     $("selected").hidden = false;
 
     let ics;
     try {
-      const r = await fetch(feed);
+      const r = await fetch(feed, { headers: { "Accept-Language": lang } });
       ics = await r.text();
       if (feed !== current) return;
-      if (!r.ok) return setStatus("feed-status", ics);
+      if (!r.ok) return setStatus("feed-status", { text: ics });
     } catch {
-      if (feed === current) setStatus("feed-status", "Could not load collection days. Try again.");
+      if (feed === current) setStatus("feed-status", "loadFailed");
       return;
     }
-    const days = upcoming(ics).slice(0, 3);
+    days = upcoming(ics).slice(0, 3);
     $("days").replaceChildren(...days.map(dayItem));
-    setStatus("feed-status", days.length ? "" : "No upcoming collections yet.");
+    setStatus("feed-status", days.length ? "" : "noUpcoming");
     $("actions").hidden = false;
   }
 
@@ -220,9 +322,10 @@
   function dayItem({ date, what }) {
     const day = new Date(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8));
     const badge = el("span", null, "badge");
-    badge.append(el("span", day.toLocaleDateString("en-GB", { weekday: "short" }).toUpperCase()), el("strong", day.getDate()));
+    const weekday = day.toLocaleDateString(t("locale"), { weekday: "short" }).replace(".", "").toUpperCase();
+    badge.append(el("span", weekday), el("strong", day.getDate()));
     const text = el("span", null, "lines");
-    text.append(el("strong", what), el("span", day.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }), "meta"));
+    text.append(el("strong", what), el("span", day.toLocaleDateString(t("locale"), { weekday: "long", day: "numeric", month: "long" }), "meta"));
     const li = el("li");
     li.append(badge, text);
     return li;
@@ -238,12 +341,14 @@
   $("copy").onclick = async () => {
     try {
       await navigator.clipboard.writeText($("url").textContent);
-      $("copy-label").textContent = "Copied";
-      setTimeout(() => ($("copy-label").textContent = "Copy"), 2000);
+      $("copy-label").textContent = t("copied");
+      setTimeout(() => ($("copy-label").textContent = t("copy")), 2000);
     } catch {
       getSelection().selectAllChildren($("url"));
     }
   };
+
+  applyLang();
 </script>
 </body>
 </html>
