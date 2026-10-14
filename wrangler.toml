@@ -1,11 +1,13 @@
 name = "avfallskalender"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+routes = [{ pattern = "avfallskalender.no", custom_domain = true }]
 
 [assets]
 directory = "./public"
 
 [previews]
 
+# Off so no requests (which contain addresses) are logged.
 [observability]
-enabled = true
+enabled = false
