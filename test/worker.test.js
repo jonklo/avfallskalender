@@ -21,6 +21,7 @@ globalThis.fetch = async (input, init = {}) => {
   calls.push({ url, headers: init.headers });
   const json = (body) => new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" } });
   if (url.startsWith("https://ws.geonorge.no/")) {
+    if (new URL(url).searchParams.get("sok") === "Nowhere 1") return json({ adresser: [] });
     const kommunenummer = new URL(url).searchParams.get("kommunenummer") ?? "3201";
     return json({ adresser: [{ adressetekst: "Storgata 1A", adressenavn: "Storgata", nummer: 1, bokstav: "A", adressekode: 222, kommunenummer }] });
   }
@@ -94,6 +95,15 @@ test("Oslo projects dates from the last known collection", async () => {
   assert.ok(rest.some((d) => d >= today && d < today + 15));
   assert.ok(days.includes(ymd(today + 2)) && days.includes(ymd(today + 9)));
   assert.match(ics, /UID:\d{8}-0301-222-1A@/);
+});
+
+test("errors follow Accept-Language", async () => {
+  const req = (lang) =>
+    worker.fetch(new Request("https://x.workers.dev/feed?address=Nowhere%201&municipality=3201", { headers: { "Accept-Language": lang } }), {}, ctx);
+  const nb = await req("nb-NO,nb;q=0.9,en;q=0.8");
+  assert.equal(nb.status, 404);
+  assert.match(await nb.text(), /^Fant ingen adresse «Nowhere 1»/);
+  assert.match(await (await req("en-GB,en;q=0.9,nb;q=0.8")).text(), /^No address found/);
 });
 
 test("FEED_KEY is enforced", async () => {

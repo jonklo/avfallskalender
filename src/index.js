@@ -43,7 +43,8 @@ export default {
       return resp;
     } catch (e) {
       console.error(e);
-      return text(e.message || String(e), e.status || 502);
+      const nb = /^(nb|nn|no)\b/i.test(req.headers.get("Accept-Language") ?? "");
+      return text((nb && e.nb) || e.message || String(e), e.status || 502);
     }
   },
 };
@@ -57,9 +58,11 @@ async function lookupAddress(address, municipality) {
   const r = await fetch(`https://ws.geonorge.no/adresser/v1/sok?${q}`, {
     headers: { "User-Agent": USER_AGENT },
   });
-  if (!r.ok) throw httpError(`Address lookup failed: HTTP ${r.status}`, 502);
+  if (!r.ok) throw httpError(`Address lookup failed: HTTP ${r.status}`, 502, `Adressesøket feilet: HTTP ${r.status}`);
   const a = (await r.json()).adresser?.[0];
-  if (!a) throw httpError(`No address found for "${address}" in ${municipality}`, 404);
+  if (!a) {
+    throw httpError(`No address found for "${address}" in ${municipality}`, 404, `Fant ingen adresse «${address}» i ${municipality}`);
+  }
 
   return {
     label: a.adressetekst,
@@ -90,6 +93,8 @@ async function fetchMinRenovasjon(addr) {
       "No collection dates found. The municipality may not use Min Renovasjon, or the " +
         "collection agreement may be registered on another address (e.g. the housing cooperative's).",
       404,
+      "Fant ingen hentedager. Kommunen bruker kanskje ikke Min Renovasjon, eller avtalen kan " +
+        "være registrert på en annen adresse (f.eks. borettslagets).",
     );
   }
   const fractions = Object.fromEntries((await norkart("fraksjoner", addr.municipality)).map((f) => [f.Id, f.Navn]));
@@ -134,6 +139,8 @@ async function fetchOslo(addr) {
       "No collection dates found in Oslo kommune's lookup. The collection agreement may be " +
         "registered on another address (e.g. the housing cooperative's).",
       404,
+      "Fant ingen hentedager i Oslo kommunes oppslag. Avtalen kan være registrert på en annen " +
+        "adresse (f.eks. borettslagets).",
     );
   }
   return collections;
@@ -223,8 +230,9 @@ function foldLine(line) {
   return parts.join("\r\n ");
 }
 
-function httpError(message, status) {
-  return Object.assign(new Error(message), { status });
+// nb is the Norwegian message, shown when the request prefers Norwegian.
+function httpError(message, status, nb) {
+  return Object.assign(new Error(message), { status, nb });
 }
 
 function text(body, status = 200) {
