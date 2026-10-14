@@ -173,7 +173,6 @@
     <p data-i18n="privacy4">Ferdige kalendere mellomlagres hos Cloudflare i opptil seks timer, så de andre tjenestene ikke belastes unødig.</p>
     <p data-i18n="privacy5">Kalenderlenken inneholder adressen din. Del den bare med dem som skal se den.</p>
     <p data-i18n="privacy6">Språkvalget ditt lagres bare i nettleseren.</p>
-    <p><span data-i18n="privacy7">Spørsmål? Ta kontakt på</span> <a href="https://github.com/jonklo/avfallskalender">GitHub</a>.</p>
     <button class="button primary" data-i18n="close">Lukk</button>
   </form>
 </dialog>
@@ -221,7 +220,6 @@
       privacy4: "Ferdige kalendere mellomlagres hos Cloudflare i opptil seks timer, så de andre tjenestene ikke belastes unødig.",
       privacy5: "Kalenderlenken inneholder adressen din. Del den bare med dem som skal se den.",
       privacy6: "Språkvalget ditt lagres bare i nettleseren.",
-      privacy7: "Spørsmål? Ta kontakt på",
       close: "Lukk",
       other: "English",
       locale: "nb-NO",
@@ -258,7 +256,6 @@
       privacy4: "Finished calendars are cached at Cloudflare for up to six hours, so the other services aren't loaded unnecessarily.",
       privacy5: "The calendar link contains your address. Only share it with people who should see it.",
       privacy6: "Your language choice is stored only in your browser.",
-      privacy7: "Questions? Get in touch on",
       close: "Close",
       other: "Norsk",
       locale: "en-US",
@@ -284,7 +281,8 @@
 
   $("privacy-open").onclick = () => $("privacy-dialog").showModal();
   // Close when clicking the backdrop; the form fills the dialog, so only backdrop clicks hit it directly.
-  $("privacy-dialog").onclick = (e) => e.target === $("privacy-dialog") && $("privacy-dialog").close();
+  // Keep the braces: an onclick handler that returns false cancels the click, which blocks the close button.
+  $("privacy-dialog").onclick = (e) => { if (e.target === $("privacy-dialog")) $("privacy-dialog").close(); };
 
   $("lang").onclick = () => {
     lang = lang === "nb" ? "en" : "nb";
