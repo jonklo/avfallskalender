@@ -34,6 +34,7 @@ export default {
       ctx.waitUntil(caches.default.put(req, resp.clone()));
       return resp;
     } catch (e) {
+      console.error(e);
       return text(e.message || String(e), e.status || 502);
     }
   },

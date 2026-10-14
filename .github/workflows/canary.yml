@@ -1,0 +1,34 @@
+name: Canary
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the live feed has upcoming collection days
+        env:
+          FEED_URL: ${{ secrets.CANARY_FEED_URL }}
+        run: |
+          if [ -z "$FEED_URL" ]; then
+            echo "::error::Set the CANARY_FEED_URL secret to a feed URL that should have dates"
+            exit 1
+          fi
+          status=$(curl -sS --retry 3 --retry-delay 10 -o feed.ics -w '%{http_code}' "$FEED_URL")
+          if [ "$status" != 200 ]; then
+            echo "::error::Feed returned HTTP $status: $(head -c 300 feed.ics)"
+            exit 1
+          fi
+          today=$(date -u +%Y%m%d)
+          upcoming=$( (grep -o 'DTSTART;VALUE=DATE:[0-9]*' feed.ics || true) | cut -d: -f2 | awk -v t="$today" '$1 >= t' | wc -l)
+          echo "Upcoming collection days: $upcoming"
+          if [ "$upcoming" -lt 1 ]; then
+            echo "::error::Feed has no upcoming collection days"
+            exit 1
+          fi
