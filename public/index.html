@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waste collection calendar</title>
+<style>
+  :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+  body { max-width: 32rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+  input { width: 100%; box-sizing: border-box; padding: .5rem; font: inherit; }
+  ul { list-style: none; padding: 0; }
+  li button { width: 100%; padding: .5rem; font: inherit; text-align: left; background: none; border: 0; border-bottom: 1px solid #8884; cursor: pointer; }
+  li button:hover { background: #8882; }
+  .subscribe { display: inline-block; padding: .5rem 1rem; border-radius: .25rem; background: #186b3a; color: #fff; text-decoration: none; }
+  code { word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Waste collection calendar</h1>
+<p>Find your address and subscribe to its collection dates from Min Renovasjon.</p>
+<input id="q" type="search" placeholder="Street and number, e.g. Storgata 1" autocomplete="off" autofocus>
+<ul id="hits"></ul>
+<div id="result" hidden>
+  <p><strong id="label"></strong></p>
+  <p><a id="subscribe" class="subscribe">Subscribe</a> <a id="google">Add to Google Calendar</a></p>
+  <p><code id="url"></code></p>
+</div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const key = new URLSearchParams(location.search).get("key");
+  let timer;
+
+  $("q").addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(search, 300);
+  });
+
+  async function search() {
+    const term = $("q").value.trim();
+    if (term.length < 3) return $("hits").replaceChildren();
+    try {
+      const r = await fetch("https://ws.geonorge.no/adresser/v1/sok?" + new URLSearchParams({ sok: term, treffPerSide: 10 }));
+      const { adresser = [] } = await r.json();
+      if (term !== $("q").value.trim()) return;
+      $("hits").replaceChildren(...adresser.map((a) => {
+        const b = document.createElement("button");
+        b.textContent = `${a.adressetekst}, ${a.postnummer} ${a.poststed} (${a.kommunenavn})`;
+        b.onclick = () => select(a, b.textContent);
+        const li = document.createElement("li");
+        li.append(b);
+        return li;
+      }));
+    } catch {
+      $("hits").textContent = "Address lookup failed. Try again.";
+    }
+  }
+
+  function select(a, label) {
+    const params = new URLSearchParams({ address: a.adressetekst, municipality: a.kommunenummer });
+    if (key) params.set("key", key);
+    const feed = `${location.origin}/feed?${params}`;
+    const webcal = feed.replace(/^https?:/, "webcal:");
+    $("label").textContent = label;
+    $("subscribe").href = webcal;
+    $("google").href = "https://calendar.google.com/calendar/render?cid=" + encodeURIComponent(webcal);
+    $("url").textContent = feed;
+    $("hits").replaceChildren();
+    $("result").hidden = false;
+  }
+</script>
+</body>
+</html>
