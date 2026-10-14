@@ -1,0 +1,16 @@
+{
+  "name": "minrenovasjon-ical",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "iCalendar feed for Norwegian waste collection dates from Min Renovasjon",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "license": "MIT"
+}
