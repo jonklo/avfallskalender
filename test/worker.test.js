@@ -10,13 +10,34 @@ globalThis.caches = {
   },
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const today = Math.floor(Date.now() / DAY_MS);
+const dmy = (day) => new Date(day * DAY_MS).toISOString().slice(0, 10).split("-").reverse().join(".");
+const ymd = (day) => new Date(day * DAY_MS).toISOString().slice(0, 10).replaceAll("-", "");
+
 const calls = [];
 globalThis.fetch = async (input, init = {}) => {
   const url = String(input);
   calls.push({ url, headers: init.headers });
   const json = (body) => new Response(JSON.stringify(body), { headers: { "Content-Type": "application/json" } });
   if (url.startsWith("https://ws.geonorge.no/")) {
-    return json({ adresser: [{ adressetekst: "Storgata 1", adressenavn: "Storgata", nummer: 1, adressekode: 222, kommunenummer: "3201" }] });
+    const kommunenummer = new URL(url).searchParams.get("kommunenummer") ?? "3201";
+    return json({ adresser: [{ adressetekst: "Storgata 1A", adressenavn: "Storgata", nummer: 1, bokstav: "A", adressekode: 222, kommunenummer }] });
+  }
+  if (url.startsWith("https://www.oslo.kommune.no/")) {
+    return json({
+      result: [{
+        HentePunkts: [{
+          Id: 1,
+          Tjenester: [
+            // Past date: projected forward every other week.
+            { Fraksjon: { Tekst: "Restavfall" }, TommeDato: "05.01.2026", Hyppighet: { Faktor: 40000 } },
+            // Future date: used as is, then weekly.
+            { Fraksjon: { Tekst: "Papir" }, TommeDato: dmy(today + 2), Hyppighet: { Faktor: 10000 } },
+          ],
+        }],
+      }],
+    });
   }
   if (url.includes("norkart")) {
     if (url.includes("fraksjoner")) return json([{ Id: 1, Navn: "Restavfall" }, { Id: 2, Navn: "Papir; papp" }, { Id: 3, Navn: "Matavfall" }]);
@@ -52,6 +73,27 @@ test("feed merges fractions per day", async () => {
   assert.match(ics, /DTSTART;VALUE=DATE:20261231\r\nDTEND;VALUE=DATE:20270101/);
   assert.match(ics, /TRIGGER:-PT5H/);
   assert.ok(ics.split("\r\n").every((l) => new TextEncoder().encode(l).length <= 75));
+});
+
+test("Oslo projects dates from the last known collection", async () => {
+  const r = await get("address=Storgata%201A&municipality=0301");
+  const ics = await r.text();
+  assert.equal(r.status, 200, ics);
+  const call = calls.find((c) => c.url.startsWith("https://www.oslo.kommune.no/"));
+  assert.equal(new URL(call.url).searchParams.get("letter"), "A");
+  assert.ok(!calls.some((c) => c.url.includes("norkart") && c.headers.Kommunenr === "0301"));
+
+  const days = [...ics.matchAll(/DTSTART;VALUE=DATE:(\d{8})/g)].map((m) => m[1]);
+  assert.ok(days.includes("20260105"));
+  // Every Restavfall day is a whole number of fortnights after the known one.
+  const rest = [...ics.matchAll(/DTSTART;VALUE=DATE:(\d{8})[^]*?SUMMARY:🗑️ ([^\r]*)/g)]
+    .filter((m) => m[2].includes("Restavfall"))
+    .map((m) => Date.UTC(+m[1].slice(0, 4), +m[1].slice(4, 6) - 1, +m[1].slice(6, 8)) / DAY_MS);
+  assert.ok(rest.length > 6);
+  assert.ok(rest.every((d) => (d - Date.UTC(2026, 0, 5) / DAY_MS) % 14 === 0));
+  assert.ok(rest.some((d) => d >= today && d < today + 15));
+  assert.ok(days.includes(ymd(today + 2)) && days.includes(ymd(today + 9)));
+  assert.match(ics, /UID:\d{8}-0301-222-1A@/);
 });
 
 test("FEED_KEY is enforced", async () => {
