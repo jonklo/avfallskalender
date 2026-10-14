@@ -3,6 +3,8 @@ Norkart's Min Renovasjon as an iCalendar feed
 
 Runs as a Cloudflare Worker. Uses the unofficial API behind the Min Renovasjon app, which can change without notice. Not affiliated with Norkart.
 
+Oslo doesn't use Min Renovasjon, so Oslo addresses use Oslo kommune's own lookup instead. It only returns the next or most recent collection per waste type, so later dates are projected from the collection frequency for about three months ahead. Holiday changes show up once Oslo kommune's lookup reflects them.
+
 ## Usage
 
 Open `https://<your-worker>.workers.dev/` to look up your address and subscribe, or use the feed URL directly:

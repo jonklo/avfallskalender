@@ -6,6 +6,14 @@ const NORKART_APP_KEY = "AE13DEEC-804F-4615-A74E-B4FAC11F0A30";
 const USER_AGENT = "minrenovasjon-ical";
 const CACHE_SECONDS = 6 * 60 * 60;
 
+// Oslo runs its own collection service instead of Min Renovasjon.
+const OSLO = "0301";
+const OSLO_API = "https://www.oslo.kommune.no/actions/snap-lib-waste-complaint/search-by-address";
+// Hyppighet.Faktor to days between collections. Only one day is known, so several times a week projects weekly.
+const OSLO_INTERVAL_DAYS = { 10000: 7, 20000: 7, 30000: 7, 40000: 14, 50000: 28 };
+const OSLO_HORIZON_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 export default {
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
@@ -24,8 +32,8 @@ export default {
 
     try {
       const addr = await lookupAddress(p.get("address"), p.get("municipality"));
-      const { fractions, schedule } = await fetchSchedule(addr);
-      const resp = new Response(buildIcs(addr, fractions, schedule), {
+      const collections = addr.municipality === OSLO ? await fetchOslo(addr) : await fetchMinRenovasjon(addr);
+      const resp = new Response(buildIcs(addr, collections), {
         headers: {
           "Content-Type": "text/calendar; charset=utf-8",
           "Cache-Control": `public, max-age=${CACHE_SECONDS}`,
@@ -57,6 +65,7 @@ async function lookupAddress(address, municipality) {
     label: a.adressetekst,
     street: a.adressenavn,
     number: String(a.nummer),
+    letter: a.bokstav ?? "",
     streetCode: String(a.adressekode),
     municipality: a.kommunenummer,
   };
@@ -72,7 +81,8 @@ async function norkart(path, municipality) {
   return r.json();
 }
 
-async function fetchSchedule(addr) {
+// Returns [{ date: "YYYYMMDD", name }], one entry per fraction and collection day.
+async function fetchMinRenovasjon(addr) {
   const qs = new URLSearchParams({ gatenavn: addr.street, husnr: addr.number, gatekode: addr.streetCode });
   const schedule = await norkart(`tommekalender?${qs}`, addr.municipality);
   if (!Array.isArray(schedule) || !schedule.length) {
@@ -83,20 +93,70 @@ async function fetchSchedule(addr) {
     );
   }
   const fractions = Object.fromEntries((await norkart("fraksjoner", addr.municipality)).map((f) => [f.Id, f.Navn]));
-  return { fractions, schedule };
+  return schedule.flatMap((entry) =>
+    (entry.Tommedatoer ?? []).map((d) => ({
+      date: d.slice(0, 10).replaceAll("-", ""),
+      name: fractions[entry.FraksjonId] ?? `Fraksjon ${entry.FraksjonId}`,
+    })),
+  );
+}
+
+// --- Collection schedule (Oslo kommune) -------------------------------------
+
+async function fetchOslo(addr) {
+  const qs = new URLSearchParams({ street: addr.street, number: addr.number, street_id: addr.streetCode });
+  if (addr.letter) qs.set("letter", addr.letter);
+  const r = await fetch(`${OSLO_API}?${qs}`, { headers: { Accept: "application/json", "User-Agent": USER_AGENT } });
+  if (!r.ok) throw httpError(`Oslo kommune: HTTP ${r.status}`, 502);
+  const body = await r.json();
+  const points = (body.result ?? body.data?.result)?.[0]?.HentePunkts ?? [];
+
+  // The API only gives one date per fraction: the next collection, or the last one once it has passed.
+  // Later dates are projected from the frequency and get corrected as the feed refreshes.
+  const today = osloToday();
+  const collections = [];
+  for (const point of points) {
+    for (const service of point.Tjenester ?? []) {
+      const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(service.TommeDato ?? "");
+      if (!m) continue;
+      const name = service.Fraksjon?.Tekst || "Avfall";
+      const step = OSLO_INTERVAL_DAYS[service.Hyppighet?.Faktor] ?? 7;
+      const known = Date.UTC(+m[3], +m[2] - 1, +m[1]) / DAY_MS;
+      collections.push({ date: ymd(known), name });
+      const next = known + Math.max(1, Math.ceil((today - known) / step)) * step;
+      for (let day = next; day <= today + OSLO_HORIZON_DAYS; day += step) {
+        collections.push({ date: ymd(day), name });
+      }
+    }
+  }
+  if (!collections.length) {
+    throw httpError(
+      "No collection dates found in Oslo kommune's lookup. The collection agreement may be " +
+        "registered on another address (e.g. the housing cooperative's).",
+      404,
+    );
+  }
+  return collections;
+}
+
+// Days since the Unix epoch for today's date in Norway.
+function osloToday() {
+  const [y, m, d] = new Date().toLocaleDateString("sv", { timeZone: "Europe/Oslo" }).split("-");
+  return Date.UTC(+y, +m - 1, +d) / DAY_MS;
+}
+
+function ymd(epochDay) {
+  return new Date(epochDay * DAY_MS).toISOString().slice(0, 10).replaceAll("-", "");
 }
 
 // --- iCalendar output (RFC 5545) --------------------------------------------
 
-function buildIcs(addr, fractions, schedule) {
+function buildIcs(addr, collections) {
   // One all-day event per collection day, listing every fraction collected that day.
   const byDay = new Map();
-  for (const entry of schedule) {
-    for (const d of entry.Tommedatoer ?? []) {
-      const day = d.slice(0, 10).replaceAll("-", "");
-      if (!byDay.has(day)) byDay.set(day, new Set());
-      byDay.get(day).add(fractions[entry.FraksjonId] ?? `Fraksjon ${entry.FraksjonId}`);
-    }
+  for (const { date, name } of collections) {
+    if (!byDay.has(date)) byDay.set(date, new Set());
+    byDay.get(date).add(name);
   }
 
   const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
@@ -116,7 +176,7 @@ function buildIcs(addr, fractions, schedule) {
     const types = [...byDay.get(day)].sort((a, b) => a.localeCompare(b, "nb")).join(", ");
     lines.push(
       "BEGIN:VEVENT",
-      `UID:${day}-${addr.municipality}-${addr.streetCode}-${addr.number}@minrenovasjon-ical`,
+      `UID:${day}-${addr.municipality}-${addr.streetCode}-${addr.number}${addr.letter}@minrenovasjon-ical`,
       `DTSTAMP:${stamp}`,
       `DTSTART;VALUE=DATE:${day}`,
       `DTEND;VALUE=DATE:${addDays(day, 1)}`,
