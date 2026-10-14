@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Waste collection calendar</title>
+<meta name="description" content="Subscribe to waste collection dates from Min Renovasjon as an iCal (ICS) feed in Apple Calendar, Google Calendar or Outlook.">
+<meta name="keywords" content="Min Renovasjon, iCal, ICS, iCalendar, webcal, calendar subscription, waste collection, tømmekalender, avfallskalender, tømmedager, renovasjon, søppeltømming, Apple Calendar, Google Calendar, Outlook">
 <style>
   :root {
     --ground: #f4f6f5;
@@ -26,7 +28,9 @@
 
   main { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 72px 24px 48px; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start; }
   .intro { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
-  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .eyebrow a { color: var(--accent); text-decoration: none; }
+  .eyebrow a:hover { text-decoration: underline; }
   h1 { margin: 0; font-size: clamp(32px, 6vw, 44px); line-height: 1.1; letter-spacing: -.02em; }
   .lead { font-size: 18px; color: var(--muted); }
   .facts { margin-top: 8px; display: flex; flex-direction: column; gap: 14px; }
@@ -71,7 +75,7 @@
 <body>
 <main>
   <section class="intro">
-    <p class="eyebrow">Min Renovasjon</p>
+    <p class="eyebrow"><a id="home" href="/">Min Renovasjon</a></p>
     <h1>Waste collection calendar</h1>
     <p class="lead">Find your address and subscribe. Collection days show up in your calendar app and stay up to date.</p>
     <ul class="facts">
@@ -128,6 +132,7 @@
   const el = (tag, text, className = "") => Object.assign(document.createElement(tag), { className }, text == null ? {} : { textContent: text });
   const titleCase = (s) => s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, (m) => m.toUpperCase());
   const key = new URLSearchParams(location.search).get("key");
+  if (key) $("home").search = new URLSearchParams({ key });
   let timer;
   let current;
 
