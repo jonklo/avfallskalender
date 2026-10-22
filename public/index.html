@@ -116,7 +116,7 @@
       <label for="q" data-i18n="address">Adresse</label>
       <div class="field">
         <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" placeholder="F.eks. Storgata 1" data-i18n-placeholder="placeholder" autocomplete="off" autofocus>
+        <input id="q" type="search" placeholder="F.eks. Storgata 1" data-i18n-placeholder="placeholder" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" autofocus>
       </div>
       <p id="search-status" class="muted" hidden></p>
       <ul id="hits" class="hits"></ul>
@@ -184,6 +184,8 @@
   const key = new URLSearchParams(location.search).get("key");
   if (key) $("home").search = new URLSearchParams({ key });
   let timer;
+  let searching;
+  const found = new Map();
   let current;
   let days = [];
 
@@ -292,7 +294,8 @@
 
   $("q").addEventListener("input", () => {
     clearTimeout(timer);
-    timer = setTimeout(search, 300);
+    searching?.abort();
+    timer = setTimeout(search, 200);
   });
 
   // Pass a strings key, or { text } for a message from the server.
@@ -304,19 +307,42 @@
   }
 
   async function search() {
-    const term = $("q").value.trim();
-    setStatus("search-status", "");
-    if (term.length < 3) return $("hits").replaceChildren();
+    const term = $("q").value.trim().replace(/\s+/g, " ");
+    if (term.length < 3) {
+      setStatus("search-status", "");
+      return $("hits").replaceChildren();
+    }
+    searching = new AbortController();
+    const { signal } = searching;
     try {
-      const r = await fetch("https://ws.geonorge.no/adresser/v1/sok?" + new URLSearchParams({ sok: term, treffPerSide: 10 }));
-      const { adresser = [] } = await r.json();
-      if (term !== $("q").value.trim()) return;
+      const adresser = await findAddresses(term, signal);
+      if (signal.aborted) return;
       $("hits").replaceChildren(...adresser.map(hit));
-      if (!adresser.length) setStatus("search-status", "noAddresses");
+      setStatus("search-status", adresser.length ? "" : "noAddresses");
     } catch {
+      if (signal.aborted) return;
       $("hits").replaceChildren();
       setStatus("search-status", "lookupFailed");
     }
+  }
+
+  // Kartverket only matches whole words, so also search with a wildcard on the word being typed,
+  // listing exact matches first. If neither finds anything, retry with fuzzy matching to allow typos.
+  async function findAddresses(term, signal) {
+    const cacheKey = term.toLowerCase();
+    if (!found.has(cacheKey)) {
+      const results = await Promise.all([lookup({ sok: term }, signal), lookup({ sok: `${term}*` }, signal)]);
+      let adresser = [...new Map(results.flat().map((a) => [`${a.kommunenummer} ${a.postnummer} ${a.adressetekst}`, a])).values()];
+      if (!adresser.length) adresser = await lookup({ sok: term, fuzzy: true }, signal);
+      found.set(cacheKey, adresser.slice(0, 10));
+    }
+    return found.get(cacheKey);
+  }
+
+  async function lookup(params, signal) {
+    const r = await fetch("https://ws.geonorge.no/adresser/v1/sok?" + new URLSearchParams({ ...params, treffPerSide: 10 }), { signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return (await r.json()).adresser ?? [];
   }
 
   function hit(a) {
