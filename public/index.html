@@ -60,7 +60,7 @@
 
   .hits { display: flex; flex-direction: column; gap: 8px; }
   .hits button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font: inherit; color: inherit; text-align: left; cursor: pointer; }
-  .hits button:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .hits button:hover, .hits button:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
   .hits button::after { content: ""; flex: none; width: 8px; height: 8px; margin-right: 4px; border-top: 2px solid var(--muted); border-right: 2px solid var(--muted); transform: rotate(45deg); }
   .lines { display: flex; flex-direction: column; }
   .meta { font-size: 14px; color: var(--muted); }
@@ -296,6 +296,28 @@
     clearTimeout(timer);
     searching?.abort();
     timer = setTimeout(search, 400);
+  });
+
+  // Arrow keys move between the input and the results. Escape closes the results, or clears the input if none are shown.
+  $("search").addEventListener("keydown", (e) => {
+    const items = [$("q"), ...$("hits").querySelectorAll("button")];
+    const i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      items[i + (e.key === "ArrowDown" ? 1 : -1)]?.focus();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      clearTimeout(timer);
+      searching?.abort();
+      if ($("hits").children.length || !$("search-status").hidden) {
+        $("hits").replaceChildren();
+        setStatus("search-status", "");
+      } else {
+        $("q").value = "";
+      }
+      $("q").focus();
+    }
   });
 
   // Pass a strings key, or { text } for a message from the server.
