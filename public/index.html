@@ -295,7 +295,7 @@
   $("q").addEventListener("input", () => {
     clearTimeout(timer);
     searching?.abort();
-    timer = setTimeout(search, 200);
+    timer = setTimeout(search, 400);
   });
 
   // Pass a strings key, or { text } for a message from the server.
@@ -326,12 +326,14 @@
     }
   }
 
-  // Kartverket only matches whole words, so also search with a wildcard on the word being typed,
-  // listing exact matches first. If neither finds anything, retry with fuzzy matching to allow typos.
+  // Kartverket only matches whole words, so search with a wildcard on the word being typed. A wildcard
+  // house number also matches longer ones ("1*" finds 10, 11, …), so then also search for the exact term
+  // and list those matches first. If nothing is found, retry with fuzzy matching to allow typos.
   async function findAddresses(term, signal) {
     const cacheKey = term.toLowerCase();
     if (!found.has(cacheKey)) {
-      const results = await Promise.all([lookup({ sok: term }, signal), lookup({ sok: `${term}*` }, signal)]);
+      const queries = /\d\S*$/.test(term) ? [term, `${term}*`] : [`${term}*`];
+      const results = await Promise.all(queries.map((sok) => lookup({ sok }, signal)));
       let adresser = [...new Map(results.flat().map((a) => [`${a.kommunenummer} ${a.postnummer} ${a.adressetekst}`, a])).values()];
       if (!adresser.length) adresser = await lookup({ sok: term, fuzzy: true }, signal);
       found.set(cacheKey, adresser.slice(0, 10));
